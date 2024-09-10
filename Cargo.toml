@@ -17,23 +17,26 @@ members = [
 ]
 
 [workspace.dependencies]
-glib = "0.19"
-glib-sys = "0.19"
-gst = { package = "gstreamer", version = "0.22" }
-gst-app = { package = "gstreamer-app", version = "0.22" }
-gst-audio = { package = "gstreamer-audio", version = "0.22" }
-gst-base = { package = "gstreamer-base", version = "0.22" }
-gst-gl = { package = "gstreamer-gl", version = "0.22" }
-gst-player = { package = "gstreamer-player", version = "0.22" }
-gst-sdp = { package = "gstreamer-sdp", version = "0.22" }
-gst-video = { package = "gstreamer-video", version = "0.22" }
-gst-webrtc = { package = "gstreamer-webrtc", version = "0.22", features = [
+glib = { git = "https://github.com/eerii/gtk-rs-core.git", branch = "nolink", package = "glib" }
+glib-sys = { git = "https://github.com/eerii/gtk-rs-core.git", branch = "nolink", package = "glib-sys" }
+
+gst = { package = "gstreamer", git = "https://gitlab.freedesktop.org/eerii/gstreamer-rs.git", branch = "nolink" }
+gst-app = { package = "gstreamer-app", git = "https://gitlab.freedesktop.org/eerii/gstreamer-rs.git", branch = "nolink" }
+gst-audio = { package = "gstreamer-audio", git = "https://gitlab.freedesktop.org/eerii/gstreamer-rs.git", branch = "nolink" }
+gst-base = { package = "gstreamer-base", git = "https://gitlab.freedesktop.org/eerii/gstreamer-rs.git", branch = "nolink" }
+gst-gl = { package = "gstreamer-gl", git = "https://gitlab.freedesktop.org/eerii/gstreamer-rs.git", branch = "nolink" }
+gst-player = { package = "gstreamer-player", git = "https://gitlab.freedesktop.org/eerii/gstreamer-rs.git", branch = "nolink" }
+gst-sdp = { package = "gstreamer-sdp", git = "https://gitlab.freedesktop.org/eerii/gstreamer-rs.git", branch = "nolink" }
+gst-video = { package = "gstreamer-video", git = "https://gitlab.freedesktop.org/eerii/gstreamer-rs.git", branch = "nolink" }
+gst-webrtc = { package = "gstreamer-webrtc", git = "https://gitlab.freedesktop.org/eerii/gstreamer-rs.git", branch = "nolink", features = [
   "v1_18",
 ] }
-gstreamer-gl-egl = { version = "0.22" }
-gstreamer-gl-wayland = { version = "0.22" }
-gstreamer-gl-x11 = { version = "0.22" }
-gstreamer-sys = "0.22"
+
+gstreamer-gl-egl = { git = "https://gitlab.freedesktop.org/eerii/gstreamer-rs.git", branch = "nolink", package = "gstreamer-gl-egl" }
+gstreamer-gl-wayland = { git = "https://gitlab.freedesktop.org/eerii/gstreamer-rs.git", branch = "nolink", package = "gstreamer-gl-wayland" }
+gstreamer-gl-x11 = { git = "https://gitlab.freedesktop.org/eerii/gstreamer-rs.git", branch = "nolink", package = "gstreamer-gl-x11" }
+gstreamer-sys = { git = "https://gitlab.freedesktop.org/eerii/gstreamer-rs.git", branch = "nolink", package = "gstreamer-sys" }
+
 ipc-channel = "0.18"
 
 [patch."https://github.com/servo/webrender"]
