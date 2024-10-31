@@ -112,6 +112,7 @@ pub mod android {
     }
 }
 
+#[cfg(target_os = "android")]
 #[test]
 fn it_works() {
     use std::ffi::CString;
