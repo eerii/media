@@ -7,10 +7,10 @@ use std::sync::Arc;
 use std::{thread, time};
 
 fn run_example(servo_media: Arc<ServoMedia>) {
-    let context =
-        servo_media.create_audio_context(&ClientContextId::build(1, 1), Default::default());
+    let context = servo_media
+        .create_audio_context(&ClientContextId::build(1, 1), Default::default())
+        .unwrap();
     let input = servo_media.create_audiostream();
-    let context = context.unwrap();
     let context = context.lock().unwrap();
     let dest = context.dest_node();
     let osc1 = context.create_node(

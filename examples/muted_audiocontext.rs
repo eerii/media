@@ -11,9 +11,10 @@ use std::{thread, time};
 
 fn run_example(servo_media: Arc<ServoMedia>) {
     let context_id1 = &ClientContextId::build(1, 1);
-    let context1 = servo_media.create_audio_context(&context_id1, Default::default());
+    let context1 = servo_media
+        .create_audio_context(&context_id1, Default::default())
+        .unwrap();
     {
-        let context1 = context1.unwrap();
         let context = context1.lock().unwrap();
         let dest = context.dest_node();
         let options = OscillatorNodeOptions::default();
@@ -30,11 +31,12 @@ fn run_example(servo_media: Arc<ServoMedia>) {
     }
 
     let context_id2 = &ClientContextId::build(1, 3);
-    let context2 = servo_media.create_audio_context(&context_id2, Default::default());
+    let context2 = servo_media
+        .create_audio_context(context_id2, Default::default())
+        .unwrap();
     {
         let mut options = OscillatorNodeOptions::default();
         options.oscillator_type = Sawtooth;
-        let context2 = context2.unwrap();
         let context = context2.lock().unwrap();
         let dest = context.dest_node();
         let osc3 = context.create_node(
@@ -51,32 +53,32 @@ fn run_example(servo_media: Arc<ServoMedia>) {
     }
 
     println!("servo_media raw s1");
-    servo_media.mute(&context_id2, true);
+    servo_media.mute(context_id2, true);
     thread::sleep(time::Duration::from_millis(2000));
 
     println!("servo_media raw s2");
-    servo_media.mute(&context_id1, true);
-    servo_media.mute(&context_id2, false);
+    servo_media.mute(context_id1, true);
+    servo_media.mute(context_id2, false);
     thread::sleep(time::Duration::from_millis(2000));
 
     println!("servo_media s1+s2");
-    servo_media.mute(&context_id1, false);
+    servo_media.mute(context_id1, false);
     thread::sleep(time::Duration::from_millis(2000));
 
     println!("servo_media muting s1");
-    servo_media.mute(&context_id1, true);
+    servo_media.mute(context_id1, true);
     thread::sleep(time::Duration::from_millis(2000));
 
     println!("servo_media muting s2");
-    servo_media.mute(&context_id2, true);
+    servo_media.mute(context_id2, true);
     thread::sleep(time::Duration::from_millis(2000));
 
     println!("servo_media unmuting s2");
-    servo_media.mute(&context_id2, false);
+    servo_media.mute(context_id2, false);
     thread::sleep(time::Duration::from_millis(2000));
 
     println!("servo_media unmuting s1");
-    servo_media.mute(&context_id1, false);
+    servo_media.mute(context_id1, false);
     thread::sleep(time::Duration::from_millis(2000));
 }
 

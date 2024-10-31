@@ -69,7 +69,7 @@ mod imp {
                 pos.requested_offset = offset;
                 gst::debug!(
                     self.cat,
-                    obj: parent,
+                    obj = parent,
                     "seeking to offset: {}",
                     pos.requested_offset
                 );
@@ -98,7 +98,7 @@ mod imp {
             data: Vec<u8>,
         ) -> Result<gst::FlowSuccess, gst::FlowError> {
             if self.seeking.load(Ordering::Relaxed) {
-                gst::debug!(self.cat, obj: parent, "seek in progress, ignored data");
+                gst::debug!(self.cat, obj = parent, "seek in progress, ignored data");
                 return Ok(gst::FlowSuccess::Ok);
             }
 
@@ -114,15 +114,15 @@ mod imp {
 
             pos.offset += length;
 
-            gst::trace!(self.cat, obj: parent, "offset: {}", pos.offset);
+            gst::trace!(self.cat, obj = parent, "offset: {}", pos.offset);
 
             // set the stream size (in bytes) to current offset if
             // size is lesser than it
-            let _ = u64::try_from(self.appsrc.size()).and_then(|size| {
+            let _ = u64::try_from(self.appsrc.size()).map(|size| {
                 if pos.offset > size {
                     gst::debug!(
                         self.cat,
-                        obj: parent,
+                        obj = parent,
                         "Updating internal size from {} to {}",
                         size,
                         pos.offset
@@ -130,7 +130,6 @@ mod imp {
                     let new_size = i64::try_from(pos.offset).unwrap();
                     self.appsrc.set_size(new_size);
                 }
-                Ok(())
             });
 
             // Split the received vec<> into buffers that are of a
@@ -142,7 +141,7 @@ mod imp {
 
             gst::log!(
                 self.cat,
-                obj: parent,
+                obj = parent,
                 "Splitting the received vec into {} blocks",
                 num_blocks
             );
@@ -151,7 +150,7 @@ mod imp {
             for i in 0..num_blocks {
                 let start = usize::try_from(i * block_size + data_offset).unwrap();
                 data_offset = 0;
-                let size = usize::try_from(block_size.min((length - start as u64).into())).unwrap();
+                let size = usize::try_from(block_size.min(length - start as u64)).unwrap();
                 let end = start + size;
 
                 let buffer_offset = buffer_starting_offset + start as u64;
@@ -166,12 +165,16 @@ mod imp {
                 }
 
                 if self.seeking.load(Ordering::Relaxed) {
-                    gst::trace!(self.cat, obj: parent, "stopping buffer appends due to seek");
+                    gst::trace!(
+                        self.cat,
+                        obj = parent,
+                        "stopping buffer appends due to seek"
+                    );
                     ret = Ok(gst::FlowSuccess::Ok);
                     break;
                 }
 
-                gst::trace!(self.cat, obj: parent, "Pushing buffer {:?}", buffer);
+                gst::trace!(self.cat, obj = parent, "Pushing buffer {:?}", buffer);
 
                 ret = self.appsrc.push_buffer(buffer);
                 match ret {
@@ -190,7 +193,7 @@ mod imp {
         inner_appsrc_proxy!(set_callbacks, callbacks, gst_app::AppSrcCallbacks, ());
 
         fn query(&self, pad: &gst::GhostPad, query: &mut gst::QueryRef) -> bool {
-            gst::log!(self.cat, obj: pad, "Handling query {:?}", query);
+            gst::log!(self.cat, obj = pad, "Handling query {:?}", query);
 
             // In order to make buffering/downloading work as we want, apart from
             // setting the appropriate flags on the player playbin,
@@ -217,9 +220,9 @@ mod imp {
             };
 
             if ret {
-                gst::log!(self.cat, obj: pad, "Handled query {:?}", query);
+                gst::log!(self.cat, obj = pad, "Handled query {:?}", query);
             } else {
-                gst::info!(self.cat, obj: pad, "Didn't handle query {:?}", query);
+                gst::info!(self.cat, obj = pad, "Didn't handle query {:?}", query);
             }
             ret
         }

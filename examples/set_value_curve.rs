@@ -32,10 +32,7 @@ fn run_example(servo_media: Arc<ServoMedia>) {
 
     let mut gain_options = GainNodeOptions::default();
     gain_options.gain = 0.0;
-    let gain = context.create_node(
-        AudioNodeInit::GainNode(gain_options.clone()),
-        Default::default(),
-    );
+    let gain = context.create_node(AudioNodeInit::GainNode(gain_options), Default::default());
 
     let osc = context.create_node(
         AudioNodeInit::OscillatorNode(Default::default()),

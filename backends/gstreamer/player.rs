@@ -27,7 +27,6 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{self, Sender};
 use std::sync::{Arc, Mutex, Once};
 use std::time;
-use std::u64;
 
 const MAX_BUFFER_SIZE: i32 = 500 * 1024 * 1024;
 
@@ -35,7 +34,7 @@ fn metadata_from_media_info(media_info: &gst_player::PlayerMediaInfo) -> Result<
     let dur = media_info.duration();
     let duration = if let Some(dur) = dur {
         let mut nanos = dur.nseconds();
-        nanos = nanos % 1_000_000_000;
+        nanos %= 1_000_000_000;
         let seconds = dur.seconds();
         Some(time::Duration::new(seconds, nanos as u32))
     } else {
@@ -127,18 +126,14 @@ impl PlayerInner {
         // Set input_size to proxy its value, since it
         // could be set by the user before calling .setup().
         self.input_size = size;
-        match self.source {
-            // The input size is only useful for seekable streams.
-            Some(ref mut source) => {
-                if let PlayerSource::Seekable(source) = source {
-                    source.set_size(if size > 0 {
-                        size as i64
-                    } else {
-                        -1 // live source
-                    });
-                }
+        if let Some(ref source) = self.source {
+            if let PlayerSource::Seekable(source) = source {
+                source.set_size(if size > 0 {
+                    size as i64
+                } else {
+                    -1 // live source
+                });
             }
-            _ => (),
         }
         Ok(())
     }
@@ -154,8 +149,11 @@ impl PlayerInner {
         self.rate = rate;
         if let Some(ref metadata) = self.last_metadata {
             if !metadata.is_seekable {
-                gst::warning!(self.cat, obj: &self.player,
-                             "Player must be seekable in order to set the playback rate");
+                gst::warning!(
+                    self.cat,
+                    obj = &self.player,
+                    "Player must be seekable in order to set the playback rate"
+                );
                 return Err(PlayerError::NonSeekableStream);
             }
             self.player.set_rate(rate);
@@ -203,7 +201,7 @@ impl PlayerInner {
         if let Some(ref metadata) = self.last_metadata {
             if let Some(ref duration) = metadata.duration {
                 if duration < &time::Duration::new(time as u64, 0) {
-                    gst::warning!(self.cat, obj: &self.player, "Trying to seek out of range");
+                    gst::warning!(self.cat, obj = &self.player, "Trying to seek out of range");
                     return Err(PlayerError::SeekOutOfRange);
                 }
             }
@@ -220,7 +218,7 @@ impl PlayerInner {
     }
 
     pub fn push_data(&mut self, data: Vec<u8>) -> Result<(), PlayerError> {
-        if let Some(ref mut source) = self.source {
+        if let Some(ref source) = self.source {
             if let PlayerSource::Seekable(source) = source {
                 if self.enough_data.load(Ordering::Relaxed) {
                     return Err(PlayerError::EnoughData);
@@ -274,8 +272,7 @@ impl PlayerInner {
                 let stream =
                     get_stream(stream).expect("Media streams registry does not contain such ID");
                 let mut stream = stream.lock().unwrap();
-                if let Some(mut stream) = stream.as_mut_any().downcast_mut::<GStreamerMediaStream>()
-                {
+                if let Some(stream) = stream.as_mut_any().downcast_mut::<GStreamerMediaStream>() {
                     let playbin = self
                         .player
                         .pipeline()
@@ -286,7 +283,7 @@ impl PlayerInner {
                     playbin.set_start_time(gst::ClockTime::NONE);
                     playbin.use_clock(Some(&clock));
 
-                    source.set_stream(&mut stream, only_stream);
+                    source.set_stream(stream, only_stream);
                     return Ok(());
                 }
             }
@@ -406,7 +403,7 @@ impl GStreamerPlayer {
 
         // Check that we actually have the elements that we
         // need to make this work.
-        for element in vec!["playbin", "queue"].iter() {
+        for element in ["playbin", "queue"].iter() {
             if gst::ElementFactory::find(element).is_none() {
                 return Err(PlayerError::Backend(format!(
                     "Missing dependency: {}",
@@ -461,7 +458,9 @@ impl GStreamerPlayer {
         if let Some(ref audio_renderer) = self.audio_renderer {
             let audio_sink = gst::ElementFactory::make("appsink")
                 .build()
-                .map_err(|error| PlayerError::Backend(format!("appsink creation failed: {error:?}")))?;
+                .map_err(|error| {
+                    PlayerError::Backend(format!("appsink creation failed: {error:?}"))
+                })?;
 
             pipeline.set_property("audio-sink", &audio_sink);
 
@@ -507,13 +506,16 @@ impl GStreamerPlayer {
         let uri = match self.stream_type {
             StreamType::Stream => {
                 register_servo_media_stream_src().map_err(|error| {
-                    PlayerError::Backend(format!("servomediastreamsrc registration error: {error:?}"))
+                    PlayerError::Backend(format!(
+                        "servomediastreamsrc registration error: {error:?}"
+                    ))
                 })?;
                 "mediastream://".to_value()
             }
             StreamType::Seekable => {
-                register_servo_src()
-                    .map_err(|error| PlayerError::Backend(format!("servosrc registration error: {error:?}")))?;
+                register_servo_src().map_err(|error| {
+                    PlayerError::Backend(format!("servosrc registration error: {error:?}"))
+                })?;
                 "servosrc://".to_value()
             }
         };
@@ -590,7 +592,12 @@ impl GStreamerPlayer {
                     if metadata.is_seekable {
                         inner.player.set_rate(inner.rate);
                     }
-                    gst::info!(inner.cat, obj: &inner.player, "Metadata updated: {:?}", metadata);
+                    gst::info!(
+                        inner.cat,
+                        obj = &inner.player,
+                        "Metadata updated: {:?}",
+                        metadata
+                    );
                     notify!(observer, PlayerEvent::MetadataUpdated(metadata));
                 }
             }
@@ -612,8 +619,12 @@ impl GStreamerPlayer {
                 updated_metadata = Some(metadata.clone());
             }
             if let Some(updated_metadata) = updated_metadata {
-                gst::info!(inner.cat, obj: &inner.player, "Duration updated: {:?}",
-                              updated_metadata);
+                gst::info!(
+                    inner.cat,
+                    obj = &inner.player,
+                    "Duration updated: {:?}",
+                    updated_metadata
+                );
                 notify!(observer, PlayerEvent::MetadataUpdated(updated_metadata));
             }
         });
@@ -642,7 +653,9 @@ impl GStreamerPlayer {
                     .new_preroll({
                         let render_sample = render_sample.clone();
                         move |video_sink| {
-                            render_sample(video_sink.pull_preroll().map_err(|_| gst::FlowError::Eos)?)
+                            render_sample(
+                                video_sink.pull_preroll().map_err(|_| gst::FlowError::Eos)?,
+                            )
                         }
                     })
                     .new_sample(move |video_sink| {
